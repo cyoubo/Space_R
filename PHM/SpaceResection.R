@@ -40,6 +40,7 @@ SpaceResection_SolveCenterCoor(Dis,LandCoor,A,B)
                     Dis[1]*SinB[1]-LandCoor[1][3],
                     Dis[2]*CosA[2]*CosB[2]-LandCoor[2][1],Dis[2]*CosA[2]*CosB[2]-LandCoor[2][2],
                     Dis[3]*SinB[3]-LandCoor[3][3],),6,1);
+ 
   temp1=c(0,Dis[1]*SinB[1]+LandCoor[1][3],-Dis[1]*SinA[1]CosB[1]-LandCoor[1][2],1,0,0);
   tmep2=c(-Dis[1]*SinB[1]-LandCoor[1][3],0,Dis[1]*CosA[1]CosB[1]+LandCoor[1][1],0,1,0);
   tmep3=c(Dis[1]*SinA[1]CosB[1]+LandCoor[1][2],-Dis[1]*CosA[1]CosB[1]-LandCoor[1][1],0,0,1);
