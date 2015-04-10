@@ -3,6 +3,7 @@
 #该R文件，主要用于有关坐标变化的函数计算
 #=========================================================
 
+#---------------------------------------------------------
 #=========================================================
 #函数名称：CoordinateSwitch_CollinearityEquation
 #函数说明：基于共线方程完成物方空间坐标与像平面坐标的转换
@@ -22,11 +23,11 @@ CoordinateSwitch_CollinearityEquation<-function(ResCoor,Intrinsc,RMatrix,TMatrix
   result=rbind(temp[c(1),]/(-temp[c(3),]),temp[c(2),]/(-temp[c(3),]))
   return (t(result));
 }
-#=========================================================
+#---------------------------------------------------------
 #=========================================================
 #函数名称：CoordinateSwitch_Bursa7Parameters
 #函数说明：基于布尔莎七参数模型完成空间坐标的转换
-#参数说明：ResCoor 待转换点,RMatrix 旋转矩阵,TMatrix 平移矩阵
+#参数说明：ResCoor 待转换点(列数为3),RMatrix 旋转矩阵,TMatrix 平移矩阵
 #          lambda 缩放系数 默认为1
 #=========================================================
 CoordinateSwitch_Bursa7Parameters<-function(ResCoor,RMatrix,TMatrix,lambda=1)
@@ -34,15 +35,13 @@ CoordinateSwitch_Bursa7Parameters<-function(ResCoor,RMatrix,TMatrix,lambda=1)
   #1.合法性检验
   if(CoordinateSwitch_IsValid(ResCoor,RMatrix,TMatrix)==0)
     return (0);
-  #2.根据待转化点的行列数，判断待转换点是否是按照[(x*n),(y*n),(z*n)]T,若不是则需要对待转换点转置
-  if(dim(ResCoor)[1]!=3)
-    ResCoor=t(ResCoor);
+  ResCoor=t(ResCoor);
   #3.根据中心坐标与待转换点的个数，生成对应长度的平移矩阵
   TMatrix=t(matrix(rep(TMatrix,dim(ResCoor)[2]),dim(ResCoor)[2],3,byrow=T));
   #4.坐标变换运算
   return (lambda*RMatrix%*%(ResCoor-TMatrix));
 }
-#=========================================================
+#---------------------------------------------------------
 #=========================================================
 #函数名称：CoordinateSwitch_CreateIntrinscMatrix
 #函数说明：构建内方位元素矩阵
@@ -52,21 +51,21 @@ CoordinateSwitch_CreateIntrinscMatrix<-function(Fouce,Cx,Cy)
 {
   return (matrix(c(Fouce,0,Cx,0,Fouce,Cy,0,0,1),3,3,byrow=T));
 }
-#=========================================================
+#---------------------------------------------------------
 #=========================================================
 #函数名称：CoordinateSwitch_CreateRotateMatrix
 #函数说明：构建旋转矩阵
 #参数说明：arpha,kappa,grama 旋转角度，以角度形式表示
 #=========================================================
-CoordinateSwitch_CreateRotateMatrix<-function(phi,kappa,grama,israd=F)
+CoordinateSwitch_CreateRotateMatrix<-function(phi,omiga,kappa,israd=F)
 {
   if(israd==F)
   {
-    p=phi*pi/180;k=kappa*pi/180;w=grama*pi/180;
+    p=phi*pi/180;k=kappa*pi/180;w=omiga*pi/180;
   }
   else
   {
-    p=phi;k=kappa;w=grama;
+    p=phi;k=kappa;w=omiga;
   }  
   a1= cos(p)*cos(k)-sin(p)*sin(w)*sin(k);
   a2=-cos(p)*sin(k)-sin(p)*sin(w)*cos(k);
@@ -79,7 +78,7 @@ CoordinateSwitch_CreateRotateMatrix<-function(phi,kappa,grama,israd=F)
   c3= cos(p)*cos(w);
   return (matrix(c(a1,b1,c1,a2,b2,c2,a3,b3,c3),3,3,byrow=T));
 }
-#=========================================================
+#---------------------------------------------------------
 #=========================================================
 #函数名称：CoordinateSwitch_CreateTranslateMatrix
 #函数说明：构建平移矩阵
@@ -89,7 +88,7 @@ CoordinateSwitch_CreateTranslateMatrix<-function(X0,Y0,Z0)
 {
   return (matrix(c(X0,Y0,Z0),3,1,byrow=T));
 }
-#=========================================================
+#---------------------------------------------------------
 #=========================================================
 #函数名称：CoordinateSwitch_ResolveRotateMatrix
 #函数说明：通过旋转矩阵反解出旋转角度
@@ -102,7 +101,7 @@ CoordinateSwitch_ResolveRotateMatrix<-function(Rmatrix)
   k=atan2(Rmatrix[2,1],Rmatrix[2,2]);
   return (list(Phi=p,W=w,Kappa=k));
 }
-#=========================================================
+#---------------------------------------------------------
 #=========================================================
 #函数名称：CoordinateSwitch_IsValid
 #函数说明：检验传入参数的合法性
@@ -130,11 +129,11 @@ CoordinateSwitch_IsValid<-function(ResCoor,RMatrix,TMatrix)
   }
   return (1);
 }
-#=========================================================
+#---------------------------------------------------------
 #=========================================================
 #函数名称：CoordinateSwitch_IsValid2
 #函数说明：检验传入参数的合法性
-#参数说明：TempPoints 7参数转化后的点,Fouce 相机焦距
+#参数说明：TempPoints 7参数转化后的点,Intrinsc 内方位元素矩阵
 #=========================================================
 CoordinateSwitch_IsValid2<-function(TempPoints,Intrinsc)
 {
@@ -149,4 +148,57 @@ CoordinateSwitch_IsValid2<-function(TempPoints,Intrinsc)
     return (0);
   }
   return (1);
+}
+#-----------------------------------------------------------------------------
+#=============================================================================
+#函数名称：CoordinateSwitch_Screan_To_PhotoCoordinateSystem
+#函数说明：完成屏幕坐标到像平面坐标的转换
+#参数说明：ImageHeight 图像高度,ImageWidth 图像宽度,Points 按行分布的(x,y)坐标
+#=============================================================================
+CoordinateSwitch_Screan_To_PhotoCoordinateSystem<-function(ImageHeight,ImageWidth,Points)
+{
+  TranslateMatrix=matrix(c(1,0,0,0,1,0,-ImageWidth/2.0,-ImageHeight/2.0,1),3,3,byrow=T);
+  MirrorMatrix=matrix(c(1,0,0,0,-1,0,0,0,1),3,3,byrow=T);
+  M=TranslateMatrix%*%MirrorMatrix;
+  result=CoordinateSwitch_2DPointCrossMatrix(Points,M);
+  return(result);
+ 
+}
+#-----------------------------------------------------------------------------
+#=============================================================================
+#函数名称：CoordinateSwitch_Screan_To_PhotoCoordinateSystem
+#函数说明：完成像平面坐标到屏幕坐标的转换
+#参数说明：ImageHeight 图像高度,ImageWidth 图像宽度,Points 按行分布的(x,y)或(x,y,1)坐标
+#=============================================================================
+CoordinateSwitch_Photo_To_ScreanCoordinateSystem<-function(ImageHeight,ImageWidth,Points)
+{
+  TranslateMatrix=matrix(c(1,0,0,0,1,0,ImageWidth/2.0,ImageHeight/2.0,1),3,3,byrow=T);
+  MirrorMatrix=matrix(c(1,0,0,0,-1,0,0,0,1),3,3,byrow=T);
+  M=MirrorMatrix%*%TranslateMatrix;
+  result=CoordinateSwitch_2DPointCrossMatrix(Points,M);
+  return(result[,c(1,2)]);
+}
+#-----------------------------------------------------------------------------
+#=============================================================================
+#函数名称：CoordinateSwitch_2DPointCrossMatrix
+#函数说明：完成二维点的矩阵变化运算
+#参数说明：Points 按行分布的(x,y)或(x,y,1)坐标，M 3*3 变化矩阵
+#=============================================================================
+CoordinateSwitch_2DPointCrossMatrix<-function(Points,M)
+{
+  size=dim(Points);
+  if(size[2]==2)
+  {
+    one=rep(1,size[1]);
+    Points=cbind(Points,one);
+    return (Points%*%M);
+  }
+  else if(size[2]==3)
+  {
+    return (Points%*%M);
+  }
+  else
+  {
+    return (-1);
+  }
 }
