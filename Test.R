@@ -1,32 +1,4 @@
-#====================================================================
-#测试代码1：
-#   实现模拟数据的共线方程地面控制点与像平面坐标系转化测试
-#====================================================================
-Test2<-function()
-{
-  #构建旋转矩阵
-  R1=CoordinateSwitch_CreateRotateMatrix(0.002778,0,0,T);
-  R2=CoordinateSwitch_CreateRotateMatrix(-0.003926,0.002075,-0.067556,T);
-  #构建内方位元素矩阵
-  Intrinsic=CoordinateSwitch_CreateIntrinscMatrix(153.24,0,0);
-  #设置地面点
-  landpoint1=matrix(c(40589,26273,2195,
-                     38589,26273, 728,
-                     38589,28273, 757,
-                     40589,28273,2386),4,3,byrow=T);
-  landpoint2=matrix(c(36589.41,25273.32,2195.17,
-                     37631.08,31324.51, 728.69,
-                     40426.54,30319.81, 757.31,
-                     39100.97,24934.98,2386.50),4,3,byrow=T);
-  #设置中心
-  dis1=matrix(c(39795,27477,7573),3,1);
-  dis2=matrix(c(39795.08,27476.75,7572.81),3,1);
-  #算例
-  result1=CoordinateSwitch_CollinearityEquation(landpoint1,Intrinsic,R1,dis1);
-  PrintWithTitle("Result",result1);
-  result2=CoordinateSwitch_CollinearityEquation(landpoint2,Intrinsic,R2,dis2);
-  PrintWithTitle("Result",result2);
-}
+
 
 #====================================================================
 #测试代码2：
@@ -52,8 +24,6 @@ Test4<-function()
                       37631.08,31324.51, 728.69,
                       40426.54,30319.81, 757.31),3,3,byrow=T);
   R2=CoordinateSwitch_CreateRotateMatrix(-0.003926,0.002075,-0.067556,T);
-
- 
   dis2=matrix(c(39795.08,27476.75,7572.81),3,1);
   Intrinsic=CoordinateSwitch_CreateIntrinscMatrix(153.24,0,0);
   
@@ -98,26 +68,28 @@ Test5<-function()
   photopoint2=matrix(c(-86.15118,-68.98761,
                       -53.40691,82.20985,
                       10.46671,64.42773),3,2,byrow=T);
+  
   photopoint3=matrix(c(-92.7514,-62.9368,
                        -47.6810,85.5143,
                        -21.7751,-76.0586),3,2,byrow=T);
   
   #计算距离改化R2
   temp=SpcaeResection_DistanceChange(photopoint2,landpoint2,Intrinsic);
-  PrintWithTitle("R2 dis",temp$Dis);
+  PrintWithTitle("测站距离计算值",temp$Dis);
   #计算距离理论值
   Cal_distance_from_Point=Cal_distance_from_Point(dis2,landpoint2);
-  PrintWithTitle("Cal_distance_from_Point",Cal_distance_from_Point);
+  PrintWithTitle("测站距离理论值",Cal_distance_from_Point);
   #利用四元数完成后方交会
-  result2=SpaceResection_Quaternion_SolveCenterCoordinate(photopoint2,landpoint2,temp$Dis,Intrinsic[1,1]);
-  PrintWithTitle("Angel 2",result2$Angel);
+  result2=SpaceResection_Quaternion_RotateMatrix(photopoint2,landpoint2,temp$Dis,Intrinsic[1,1]);
+  PrintWithTitle("旋转矩阵",result2$R);
+  PrintWithTitle("姿态角度",result2$Angel);
   
   #计算距离改化R3
-  temp=SpcaeResection_DistanceChange(photopoint3,landpoint3,Intrinsic);
-  PrintWithTitle("R3 dis",temp$Dis);
+  #temp=SpcaeResection_DistanceChange(photopoint3,landpoint3,Intrinsic);
+  #PrintWithTitle("R3 dis",temp$Dis);
   #利用四元数完成后方交会
-  result2=SpaceResection_Quaternion_SolveCenterCoordinate(photopoint3,landpoint3,temp$Dis,Intrinsic[1,1]);
-  PrintWithTitle("Angel 3",result2$Angel);
+  #result2=SpaceResection_Quaternion_RotateMatrix(photopoint3,landpoint3,temp$Dis,Intrinsic[1,1]);
+  #PrintWithTitle("Angel 3",result2$Angel);
 }
 
 Test6<-function()
@@ -174,11 +146,11 @@ Test7<-function()
   
   print("============================================================")
   
-  #result=CoordinateSwitch_CollinearityEquation(landpoint2,Intrinsic,R3,dis2);
-  #PrintWithTitle("result",result);
-  SpcaeResection_DistanceChange=SpcaeResection_DistanceChange(photopoint3,landpoint3,Intrinsic);
+  result=CoordinateSwitch_CollinearityEquation(landpoint2,Intrinsic,R2,dis2);
+  PrintWithTitle("result",result);
+  SpcaeResection_DistanceChange=SpcaeResection_DistanceChange(result,landpoint2,Intrinsic);
   PrintWithTitle("SpcaeResection_DistanceChange",SpcaeResection_DistanceChange$Dis);
-  #Cal_distance_from_Point=Cal_distance_from_Point(dis2,landpoint2);
-  #PrintWithTitle("Cal_distance_from_Point",Cal_distance_from_Point);
+  Cal_distance_from_Point=Cal_distance_from_Point(dis2,landpoint2);
+  PrintWithTitle("Cal_distance_from_Point",Cal_distance_from_Point);
   
 }

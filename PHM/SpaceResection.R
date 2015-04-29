@@ -7,10 +7,10 @@
 #=============================================================
 #函数名称：SpcaeResection_DistanceChange
 #函数说明：实现空间后方交会直接解的距离改化
-#参数说明：PhotoCoor 像平面点,LandCoor 地面点
+#参数说明：PhotoCoor (列数为3)像平面点,LandCoor (列数为3)地面点
 #          Intrinsc 内方位元素矩阵，EPS 迭代精度
 #=============================================================
-SpcaeResection_DistanceChange<-function(PhotoCoor,LandCoor,Intrinsic,EPS=0.1)
+SpaceResection_DistanceChange<-function(PhotoCoor,LandCoor,Intrinsic,EPS=0.1)
 {
   fx=Intrinsic[1,1];fy=Intrinsic[2,2];cx=Intrinsic[1,3];cy=Intrinsic[2,3];
   A=rep(1,3);B=rep(1,3);
@@ -63,10 +63,15 @@ SpcaeResection_DistanceChange<-function(PhotoCoor,LandCoor,Intrinsic,EPS=0.1)
     #更新距离值
     x=temp;
   }
-  
   return(list(A=A,B=B,Dis=as.vector(sqrt(x))));
 }
 
+#=============================================================
+#函数名称：SpaceResection_SolveCenterCoordinate
+#函数说明：利用基本方法求解外摄影中心
+#参数说明：Dis (列数为3)距离数组,LandCoor (列数为3)地面点
+#          A,B SpcaeResection_DistanceChange中计算出的AB矩阵
+#=============================================================
 SpaceResection_SolveCenterCoordinate<-function(Dis,LandCoor,A,B)
 {
   CosA=rep(NA,3);CosB=rep(NA,3);SinA=rep(NA,3);SinB=rep(NA,3)
@@ -108,18 +113,34 @@ SpaceResection_SolveCenterCoordinate<-function(Dis,LandCoor,A,B)
   
   return (result);
 }
-
-SpaceResection_Quaternion_SolveCenterCoordinate<-function(ImagePoint,LandPoint,Dis,f)
+#=============================================================
+#函数名称：SpaceResection_Quaternion_RotateMatrix
+#函数说明：利用空间四元素，计算影像的旋转参数
+#参数说明：ImagePoint 图像坐标(列数为2),LandPoint 地面坐标(列数为3),
+#          Dis 地面点到摄影中心的距离,f 相机主距
+#=============================================================
+SpaceResection_Quaternion_RotateMatrix<-function(ImagePoint,LandPoint,Dis,f)
 {
-  Lumbda=rep(NA,3);
+  ####################test######################
+  PrintWithTitle("ImagePoint in function",ImagePoint);
+  PrintWithTitle("LandPoint in function",LandPoint);
+  PrintWithTitle("Dis in function",Dis);
+  PrintWithTitle("f in function",f);
+  ##############################################
+  
+  PrintWithTitle("Dis in function",Dis);
+  
+  Lumbda=rep(0,3);
   ImageSpcaePoints=matrix(c(rep(NA,9)),3,3);
   for(i in c(1:3))
   {
-    Lumbda[i]=Dis[i]/sqrt(ImagePoint[i,1]^2+ImagePoint[i,2]^2+f^2)
+    Lumbda[i]=Dis[i]/sqrt(ImagePoint[i,1]^2+ImagePoint[i,2]^2+f^2);
     ImageSpcaePoints[i,1]=Lumbda[i]*ImagePoint[i,1];
     ImageSpcaePoints[i,2]=Lumbda[i]*ImagePoint[i,2];
     ImageSpcaePoints[i,3]=-1*Lumbda[i]*f;
   }
-  return (Quaternion_Direction_RotateMatrix(LandPoint,ImageSpcaePoints));
-  
+  ##############################################
+  PrintWithTitle("ImageSpcaePoints in function",ImageSpcaePoints);
+  ##############################################
+  return (Quaternion_Direction_RotateMatrix(LandPoint[1:3,],ImageSpcaePoints[1:3,]));
 }

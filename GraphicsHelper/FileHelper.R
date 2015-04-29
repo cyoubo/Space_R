@@ -141,7 +141,42 @@ FileHelper_Matrix_Csvoutputting<-function(Mat,path)
 {
   if(FileHelper_CreateDir(FileHelper_GetFilepath(path)[[1]])==T)
   {
-   write.csv(mat);
+   write.csv(mat,path);
   } 
 }
-
+#---------------------------------------------------
+#===================================================
+#函数名称：将数据输出为Txt文件
+#函数参数：title 数据的标题
+#          data 待输出的矩阵
+#          path 输出的Txt文件路径
+#函数返回值：void
+#===================================================
+FileHelper_Data_Txtoutputting<-function(title,data,path)
+{
+  if(FileHelper_CreateDir(FileHelper_GetFilepath(path)[[1]])==T)
+  {
+    sink(path);
+    print(paste("=-=-=-=-=-=-=-=-=-=-=",title,"=-=-=-=-=-=-=-=-=-=-=");
+    print(data); 
+    sink();
+  } 
+}
+#---------------------------------------------------
+#===================================================
+#函数名称：将数据输出为Txt文件(路径相同时，则采用追加模式)
+#函数参数：title 数据的标题
+#          data 待输出的矩阵
+#          path 输出的Txt文件路径
+#函数返回值：void
+#===================================================
+FileHelper_Data_TxtAppendoutputting<-function(title,data,path)
+{
+  if(FileHelper_CreateDir(FileHelper_GetFilepath(path)[[1]])==T)
+  {
+    sink(path,append=T);
+    print(paste("=-=-=-=-=-=-=-=-=-=-=",title,"=-=-=-=-=-=-=-=-=-=-=");
+    print(data); 
+    sink();
+  } 
+}
