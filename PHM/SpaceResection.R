@@ -31,7 +31,7 @@ SpaceResection_DistanceChange<-function(PhotoCoor,LandCoor,Intrinsic,EPS=0.1)
 
   #求解方程并返回S1,s2,s3
   F12=0.5/(1-cosPHI12);F23=0.5/(1-cosPHI23);F31=0.5/(1-cosPHI31);
- # F12=0.5/(2*(sin(acos(cosPHI12)/2))^2);F23=0.5/(2*(sin(acos(cosPHI23)/2))^2);F31=0.5/(2*(sin(acos(cosPHI31)/2))^2);
+  #F12=0.5/(2*(sin(acos(cosPHI12)/2))^2);F23=0.5/(2*(sin(acos(cosPHI23)/2))^2);F31=0.5/(2*(sin(acos(cosPHI31)/2))^2);
   G12=cosPHI12*F12;    G23=cosPHI23*F23;    G31=cosPHI31*F31;
   A1=matrix(c(1,-1,1,1,1,-1,-1,1,1),3,3,byrow=3);
   a=matrix(c(F12*S12^2,F23*S23^2,F31*S31^2),3,1);
@@ -64,6 +64,79 @@ SpaceResection_DistanceChange<-function(PhotoCoor,LandCoor,Intrinsic,EPS=0.1)
     x=temp;
   }
   return(list(A=A,B=B,Dis=as.vector(sqrt(x))));
+}
+#=============================================================
+#函数名称：SpcaeResection_DistanceChange_DPI
+#函数说明：实现空间后方交会直接解的距离改化
+#参数说明：PhotoCoor (列数为3)像平面点,LandCoor (列数为3)地面点
+#          scale 航摄比例尺
+#          Intrinsc 内方位元素矩阵，EPS 迭代精度
+#=============================================================
+SpaceResection_DistanceChange_DPI<-function(PhotoCoor,LandCoor,scale,Intrinsic,EPS=0.1)
+{
+  x0=Intrinsic[1,3];y0=Intrinsic[2,3];
+  
+  DSA0=scale*sqrt((PhotoCoor[1,1]-x0)^2+(PhotoCoor[1,2]-y0)^2+(Intrinsic[1,1])^2);
+  DSB0=scale*sqrt((PhotoCoor[2,1]-x0)^2+(PhotoCoor[2,2]-y0)^2+(Intrinsic[1,1])^2);
+  DSC0=scale*sqrt((PhotoCoor[3,1]-x0)^2+(PhotoCoor[3,2]-y0)^2+(Intrinsic[1,1])^2);
+  
+  DSa=sqrt((PhotoCoor[1,1]+x0)^2+(PhotoCoor[1,2]+y0)^2+(Intrinsic[1,1])^2);
+  DSb=sqrt((PhotoCoor[2,1]+x0)^2+(PhotoCoor[2,2]+y0)^2+(Intrinsic[1,1])^2);
+  DSc=sqrt((PhotoCoor[3,1]+x0)^2+(PhotoCoor[3,2]+y0)^2+(Intrinsic[1,1])^2);
+  
+
+  
+  Dab=sqrt((PhotoCoor[1,1]-PhotoCoor[2,1])^2+(PhotoCoor[1,2]-PhotoCoor[2,2])^2);
+  Dbc=sqrt((PhotoCoor[2,1]-PhotoCoor[3,1])^2+(PhotoCoor[2,2]-PhotoCoor[3,2])^2);
+  Dac=sqrt((PhotoCoor[1,1]-PhotoCoor[3,1])^2+(PhotoCoor[1,2]-PhotoCoor[3,2])^2);
+  
+  cosasb=(DSa^2+DSb^2-Dab^2)/(2*DSa*DSb);
+  cosasc=(DSa^2+DSc^2-Dac^2)/(2*DSa*DSc);
+  cosbsc=(DSb^2+DSc^2-Dbc^2)/(2*DSb*DSc);
+  
+  DAB=sqrt((LandCoor[1,1]-LandCoor[2,1])^2+(LandCoor[1,2]-LandCoor[2,2])^2+(LandCoor[1,3]-LandCoor[2,3])^2);
+  DAC=sqrt((LandCoor[1,1]-LandCoor[3,1])^2+(LandCoor[1,2]-LandCoor[3,2])^2+(LandCoor[1,3]-LandCoor[3,3])^2);
+  DBC=sqrt((LandCoor[2,1]-LandCoor[3,1])^2+(LandCoor[2,2]-LandCoor[3,2])^2+(LandCoor[2,3]-LandCoor[3,3])^2);
+  
+  DDS=rep(1000,3);
+  
+  while(abs(min(DDS))>EPS)
+  {
+    a1=2*DSA0-2*DSB0*cosasb;
+    a2=2*DSB0-2*DSA0*cosasb;
+    b1=2*DSA0-2*DSC0*cosasc;
+    b2=2*DSC0-2*DSA0*cosasc;
+    c1=2*DSB0-2*DSC0*cosbsc;
+    c2=2*DSC0-2*DSB0*cosbsc;
+    
+    l1=DAB^2-(DSA0^2+DSB0^2-2*DSA0*DSB0*cosasb);
+    l2=DAC^2-(DSA0^2+DSC0^2-2*DSA0*DSC0*cosasc);
+    l3=DBC^2-(DSC0^2+DSB0^2-2*DSC0*DSB0*cosbsc);
+    
+    A=matrix(c(a1,a2,0,b1,0,b2,0,c1,c2),nrow=3,byrow=T);
+    L=matrix(c(l1,l2,l3),nrow=3,byrow=T);
+    
+    DDS=solve(A)%*%L;
+     
+    DSA0=DSA0+DDS[1,1];
+    DSB0=DSB0+DDS[2,1];
+    DSC0=DSC0+DDS[3,1];
+    
+  } 
+  return (c(DSA0,DSB0,DSC0));
+}
+
+SpaceResection_DistanceChange_DPI_Noscale<-function(PhotoCoor,LandCoor,Intrinsic,EPS=0.1)
+{
+  #Dab=sqrt((PhotoCoor[1,1]-PhotoCoor[2,1])^2+(PhotoCoor[1,2]-PhotoCoor[2,2])^2);
+  #Dbc=sqrt((PhotoCoor[2,1]-PhotoCoor[3,1])^2+(PhotoCoor[2,2]-PhotoCoor[3,2])^2);
+  #Dac=sqrt((PhotoCoor[1,1]-PhotoCoor[3,1])^2+(PhotoCoor[1,2]-PhotoCoor[3,2])^2);
+  #DAB=sqrt((LandCoor[1,1]-LandCoor[2,1])^2+(LandCoor[1,2]-LandCoor[2,2])^2+(LandCoor[1,3]-LandCoor[2,3])^2);
+  #DAC=sqrt((LandCoor[1,1]-LandCoor[3,1])^2+(LandCoor[1,2]-LandCoor[3,2])^2+(LandCoor[1,3]-LandCoor[3,3])^2);
+  #DBC=sqrt((LandCoor[2,1]-LandCoor[3,1])^2+(LandCoor[2,2]-LandCoor[3,2])^2+(LandCoor[2,3]-LandCoor[3,3])^2);
+  
+  scale=mean(as.vector(dist(LandCoor)/dist(PhotoCoor)));  
+  return(SpaceResection_DistanceChange_DPI(PhotoCoor,LandCoor,scale=scale,Intrinsic));
 }
 
 #=============================================================
@@ -119,28 +192,20 @@ SpaceResection_SolveCenterCoordinate<-function(Dis,LandCoor,A,B)
 #参数说明：ImagePoint 图像坐标(列数为2),LandPoint 地面坐标(列数为3),
 #          Dis 地面点到摄影中心的距离,f 相机主距
 #=============================================================
-SpaceResection_Quaternion_RotateMatrix<-function(ImagePoint,LandPoint,Dis,f)
+SpaceResection_Quaternion_RotateMatrix<-function(ImagePoint,LandPoint,Dis,Intrinsic)
 {
-  ####################test######################
-  PrintWithTitle("ImagePoint in function",ImagePoint);
-  PrintWithTitle("LandPoint in function",LandPoint);
-  PrintWithTitle("Dis in function",Dis);
-  PrintWithTitle("f in function",f);
-  ##############################################
-  
-  PrintWithTitle("Dis in function",Dis);
-  
   Lumbda=rep(0,3);
+  f=Intrinsic[1,1];
+  x0=Intrinsic[1,3];
+  y0=Intrinsic[2,3];
   ImageSpcaePoints=matrix(c(rep(NA,9)),3,3);
   for(i in c(1:3))
   {
-    Lumbda[i]=Dis[i]/sqrt(ImagePoint[i,1]^2+ImagePoint[i,2]^2+f^2);
-    ImageSpcaePoints[i,1]=Lumbda[i]*ImagePoint[i,1];
-    ImageSpcaePoints[i,2]=Lumbda[i]*ImagePoint[i,2];
+    #注意加上偏心畸变或者主点偏移
+    Lumbda[i]=Dis[i]/sqrt((ImagePoint[i,1]+x0)^2+(ImagePoint[i,2]+y0)^2+f^2);
+    ImageSpcaePoints[i,1]=Lumbda[i]*(ImagePoint[i,1]+x0);
+    ImageSpcaePoints[i,2]=Lumbda[i]*(ImagePoint[i,2]+y0);
     ImageSpcaePoints[i,3]=-1*Lumbda[i]*f;
   }
-  ##############################################
-  PrintWithTitle("ImageSpcaePoints in function",ImageSpcaePoints);
-  ##############################################
   return (Quaternion_Direction_RotateMatrix(LandPoint[1:3,],ImageSpcaePoints[1:3,]));
 }

@@ -152,15 +152,19 @@ FileHelper_Matrix_Csvoutputting<-function(Mat,path)
 #          path 输出的Txt文件路径
 #函数返回值：void
 #===================================================
-FileHelper_Data_Txtoutputting<-function(title,data,path)
+FileHelper_Data_Txtoutputting<-function(path,title,data)
 {
   if(FileHelper_CreateDir(FileHelper_GetFilepath(path)[[1]])==T)
   {
     sink(path);
-    print(paste("=-=-=-=-=-=-=-=-=-=-=",title,"=-=-=-=-=-=-=-=-=-=-=");
+    print(paste("_____________________",title,"_____________________"),quote=F);
     print(data); 
     sink();
   } 
+  else
+  {
+    print("out error");
+  }
 }
 #---------------------------------------------------
 #===================================================
@@ -170,13 +174,29 @@ FileHelper_Data_Txtoutputting<-function(title,data,path)
 #          path 输出的Txt文件路径
 #函数返回值：void
 #===================================================
-FileHelper_Data_TxtAppendoutputting<-function(title,data,path)
+FileHelper_Data_TxtAppendoutputting<-function(path,title,data)
 {
   if(FileHelper_CreateDir(FileHelper_GetFilepath(path)[[1]])==T)
   {
     sink(path,append=T);
-    print(paste("=-=-=-=-=-=-=-=-=-=-=",title,"=-=-=-=-=-=-=-=-=-=-=");
-    print(data); 
+    print(title,quote=F);
+    print(data,quote=F,digits=6); 
+    sink();
+  } 
+}
+#---------------------------------------------------
+#===================================================
+#函数名称：将数据输出为Txt文件(路径相同时，则采用追加模式)
+#函数参数：data 待输出的矩阵
+#          path 输出的Txt文件路径
+#函数返回值：void
+#===================================================
+FileHelper_Data_TxtAppendoutNotitle<-function(path,data)
+{
+  if(FileHelper_CreateDir(FileHelper_GetFilepath(path)[[1]])==T)
+  {
+    sink(path,append=T);
+    print(data,quote=F,digits=6); 
     sink();
   } 
 }

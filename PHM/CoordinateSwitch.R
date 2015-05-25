@@ -11,16 +11,34 @@
 #          ResCoor 待转换点,RMatrix 旋转矩阵,TMatrix 平移矩阵
 #          lambda 缩放系数 默认为1
 #=========================================================
-CoordinateSwitch_CollinearityEquation<-function(ResCoor,Intrinsc,RMatrix,TMatrix,lambda=1)
+CoordinateSwitch_CollinearityEquation<-function(ResCoor,Intrinsc,RMatrix,TMatrix,lambda=1,filename="")
 {
+  
+  ######################################################################
+  path=paste("E://collinear",filename,".txt");
+  FileHelper_Data_Txtoutputting(path,"ResCoor",ResCoor);
+  FileHelper_Data_TxtAppendoutputting(path,"RMatrix",RMatrix);
+  FileHelper_Data_TxtAppendoutputting(path,"RMatrix is cross",(t(RMatrix)-solve(RMatrix)));
+  ######################################################################
+  
   #1.7参数变化
   temp=CoordinateSwitch_Bursa7Parameters(ResCoor,RMatrix,TMatrix,lambda);
+  
+  ######################################################################
+  FileHelper_Data_TxtAppendoutputting(path,"imageSpace",t(temp));
+  ######################################################################
+  
   #2.合法性检验
   CoordinateSwitch_IsValid2(temp,Intrinsc);
   #2.共线投影计算
   temp=Intrinsc%*%temp;
   #将z值消去
   result=rbind(temp[c(1),]/(-temp[c(3),]),temp[c(2),]/(-temp[c(3),]))
+  
+  ######################################################################
+  FileHelper_Data_TxtAppendoutputting(path,"imagepoint",t(result));
+  ######################################################################
+  
   return (t(result));
 }
 #---------------------------------------------------------

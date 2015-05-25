@@ -13,8 +13,8 @@
 Quaternion_Direction_RotateMatrix<-function(SrcCoor,ResCoor)
 {
   ########test##############
-  PrintWithTitle("SrcCoor in Quaternion_Direction_RotateMatrix",SrcCoor);
-  PrintWithTitle("ResCoor in Quaternion_Direction_RotateMatrix",ResCoor)
+  #PrintWithTitle("SrcCoor in Quaternion_Direction_RotateMatrix",SrcCoor);
+  #PrintWithTitle("ResCoor in Quaternion_Direction_RotateMatrix",ResCoor)
   #################################
   #1.Êý¾Ý¼ìÑé
   if(dim(SrcCoor)[2]!=3|dim(ResCoor)[2]!=3|dim(SrcCoor)[1]!=dim(ResCoor)[1])
